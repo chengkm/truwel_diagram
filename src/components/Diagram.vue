@@ -4,8 +4,8 @@
       <el-avatar shape="circle" :size="50" :src="avtar"></el-avatar>
       <p>华益瑞数据分析平台-测试版</p>
     </el-header>
-    <el-container>
-      <el-aside width="300px">
+    <el-container class="bottom-container" :style="bottom_container_height">
+      <el-aside width="300px" :style="bottom_container_height">
         <el-tree
           :data="data"
           show-checkbox
@@ -16,8 +16,8 @@
         >
         </el-tree>
       </el-aside>
-      <el-main>
-        <el-date-picker
+      <el-main :style="bottom_container_height">
+        <el-date-picker        
           v-model="value1"
           type="daterange"
           range-separator="至"
@@ -33,7 +33,7 @@
           <el-radio :label="4">列表</el-radio>
         </el-radio-group>
         <el-button type="primary" @click="postdata()">提交</el-button>
-        <div class="main">
+        <div class="main" :style="bottom_container_height_chart">
           <!-- <el-table
             :data="tableData"
             border
@@ -54,11 +54,11 @@
             </el-table-column>
           </el-table> -->
           <u-table
+            :height="bottom_container_height_chart.height"
             :data="tableData"
             border
             width="100%"
             v-if="show_table"
-            :height="height"
             use-virtual
             showBodyOverflow="title"
             showHeaderOverflow="title"
@@ -76,8 +76,13 @@
             >
             </u-table-column>
           </u-table>
-          <div id="myChart" :style="{ width: '100%', height: '100%' }"></div>
+          <div
+            id="myChart"
+            :style="{ width: '100%', height: '100%' }"
+            v-if="show_table_echart"
+          ></div>
         </div>
+        <a href="https://datav.truwel.com/" target="_blank">数据可视化大屏</a>
       </el-main>
     </el-container>
   </el-container>
@@ -88,6 +93,12 @@ import ecStat from "echarts-stat";
 export default {
   data() {
     return {
+      bottom_container_height: {
+        height: "",
+      },
+      bottom_container_height_chart: {
+        height: "",
+      },
       height: 900,
       rowHeight: 55,
       avtar: require("../assets/truwel.jpg"),
@@ -102,12 +113,14 @@ export default {
       cols: [],
       id: "",
       show_table: false,
+      show_table_echart: true,
     };
   },
   methods: {
     //请求数据
     async postdata() {
       try {
+        this.show_table_echart = true;
         if (!this.value1) {
           return this.$message.error("请选择时间");
         } else if (this.$refs.tree.getCheckedNodes(true) == "") {
@@ -162,6 +175,7 @@ export default {
         } else if (this.radio == 3) {
           this.diagram_windrose_mult(res1);
         } else if (this.radio == 4) {
+          this.show_table_echart = false;
           this.table_mult(res1);
         }
       } catch (error_message) {
@@ -636,11 +650,21 @@ export default {
       let begin = year + "-" + month + "-" + da2;
       this.value1 = [begin, end]; //将值设置给插件绑定的数据
     },
-
+    getHeight() {
+      this.bottom_container_height.height = window.innerHeight - 60 + "px";
+      this.bottom_container_height_chart.height = window.innerHeight - 155 + "px";
+    },
     async gettree() {
       const { data: res2 } = await this.$http.get("tree.php");
       this.data = res2;
     },
+  },
+  created() {
+    window.addEventListener("resize", this.getHeight);
+    this.getHeight();
+  },
+  destroyed(){
+    window.removeEventListener('resize', this.getHeight);
   },
   beforeMount: function () {
     this.gettree();
@@ -653,6 +677,9 @@ export default {
 .home-container {
   height: 100%;
 }
+/* .bottom-container{
+  height: 1020px;
+} */
 .el-header {
   background: #373d41;
   display: flex;
@@ -666,10 +693,12 @@ export default {
 }
 .el-aside {
   background: #333744;
-  height: 1020px;
+  /* height: 1020px; */
 }
 .el-main {
   background: #eaedf1;
+  /* height: 100%; */
+  padding: 10px;
 }
 .el-button,
 .el-radio-group {
@@ -682,6 +711,13 @@ export default {
   box-sizing: border-box;
   margin-top: 10px;
   width: 100%;
-  height: 920px;
+  /* height: 920px; */
+}
+.el-main a {
+  color: #409eff;
+  text-decoration: none;
+  margin-left: 45%;
+  font-size: 15px;
+  font-family: "PingFang SC";
 }
 </style>
